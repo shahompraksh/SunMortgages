@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Create an Account | SunMortgages{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-7 col-lg-6 col-xl-5">
+        <div class="card card-sun shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex p-3 rounded-circle bg-warning-subtle text-warning mb-2">
+                        <i class="fa-solid fa-user-plus fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1" style="color: var(--sun-navy);">Register Customer Account</h3>
+                    <p class="text-muted small">Choose between Individual Customer or Property Developer.</p>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text small text-muted">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1"><i class="fa-solid fa-circle-exclamation me-1"></i>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="p-3 bg-light rounded small text-muted mb-3 border">
+                        <i class="fa-solid fa-shield-halved text-success me-1"></i>
+                        <strong>Security Notice:</strong> Public registration is restricted to Individual Customer and Property Developer categories. Staff accounts must be provisioned by an authorised administrator.
+                    </div>
+
+                    <button type="submit" class="btn btn-sun-primary w-100 py-2 shadow-sm">
+                        <i class="fa-solid fa-check me-1"></i> Complete Registration
+                    </button>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center small">
+                    <span class="text-muted">Already registered with SunMortgages?</span><br>
+                    <a href="{% url 'login' %}" class="fw-bold text-decoration-none" style="color: var(--sun-navy);">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Sign In to Existing Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Automatically apply Bootstrap form-control class to Django form fields
+    document.addEventListener("DOMContentLoaded", function () {
+        const inputs = document.querySelectorAll("input[type=text], input[type=password], input[type=email], select, textarea");
+        inputs.forEach(el => {
+            if (el.tagName === "SELECT") {
+                el.classList.add("form-select");
+            } else {
+                el.classList.add("form-control");
+            }
+        });
+    });
+</script>
+{% endblock %}

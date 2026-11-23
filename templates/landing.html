@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}SunMortgages | Next-Generation Mortgage & Development Lending{% endblock %}
+
+{% block extra_head %}
+<style>
+    .hero-section {
+        background: radial-gradient(circle at 80% 20%, rgba(243, 156, 18, 0.18) 0%, transparent 40%),
+                    linear-gradient(135deg, var(--sun-navy-dark) 0%, var(--sun-navy) 60%, #1f4779 100%);
+        color: #ffffff;
+        padding: 4.5rem 1rem 4rem;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 20px 45px rgba(15, 36, 62, 0.15);
+    }
+    .hero-badge {
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        color: #f39c12;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+    }
+    .hero-title {
+        font-size: 2.75rem;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.5px;
+    }
+    .hero-title span {
+        color: var(--sun-gold);
+        text-shadow: 0 0 20px rgba(243, 156, 18, 0.35);
+    }
+    .calculator-card {
+        background: #ffffff;
+        border-radius: 18px;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+    .scheme-card {
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        background: #ffffff;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .scheme-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 30px rgba(23, 54, 93, 0.12);
+        border-color: #cbd5e1;
+    }
+    .stat-box {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    }
+    .stat-number {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--sun-navy);
+        line-height: 1;
+    }
+    .pill-feature {
+        font-size: 0.82rem;
+        background: #f1f5f9;
+        color: #334155;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-2">
+
+    <!-- HERO SECTION -->
+    <div class="hero-section text-center text-lg-start">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <div class="hero-badge">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Powered by Google Gemini 3.5 AI &amp; Open Banking
+                </div>
+                <h1 class="hero-title mb-3">
+                    Intelligent Mortgages with <span>Precision, Speed</span> &amp; Integrity.
+                </h1>
+                <p class="fs-5 text-white-50 mb-4" style="max-width: 620px;">
+                    Whether you are purchasing your first home or structuring a multi-million-pound property development project, SunMortgages delivers instant algorithmic eligibility and AI-driven underwriting.
+                </p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                    <a href="#calculator-section" class="btn btn-sun-gold btn-lg px-4 py-3 shadow">
+                        <i class="fa-solid fa-calculator me-2"></i> Calculate Repayments
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-lg px-4 py-3">
+                            <i class="fa-solid fa-gauge-high me-2"></i> Open Portal Dashboard
+                        </a>
+                    {% else %}
+                        <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg px-4 py-3">
+                            <i class="fa-solid fa-user-plus me-2"></i> Open Account
+                        </a>
+                    {% endif %}
+                    <button onclick="toggleSunAIChat()" class="btn btn-primary btn-lg px-4 py-3" style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255,255,255,0.3);">
+                        <i class="fa-solid fa-robot text-warning me-2"></i> Ask AI Advisor
+                    </button>
+                </div>
+
+                <div class="d-flex flex-wrap gap-4 mt-4 pt-3 border-top border-white border-opacity-10 justify-content-center justify-content-lg-start small text-white-50">
+                    <div><i class="fa-solid fa-circle-check text-warning me-1"></i> FCA Standards Regulated</div>
+                    <div><i class="fa-solid fa-shield-halved text-warning me-1"></i> 256-Bit Financial Encryption</div>
+                    <div><i class="fa-solid fa-bolt text-warning me-1"></i> Rapid AI Underwriting Decisions</div>
+                </div>
+            </div>
+
+            <!-- Hero Graphic / Quick Scheme Badge Card -->
+            <div class="col-lg-5 text-center">
+                <div class="p-4 rounded-4 shadow-lg text-start" style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-warning text-dark px-3 py-1 fw-bold">MARKET RATES TODAY</span>
+                        <small class="text-white-50"><i class="fa-solid fa-clock me-1"></i> Live Index</small>
+                    </div>
+                    <div class="d-flex align-items-baseline gap-2 mb-2">
+                        <span class="fs-1 fw-bold text-white">{{ stats.min_rate }}%</span>
+                        <span class="text-white-50">Fixed p.a. from</span>
+                    </div>
+                    <p class="text-white-50 small mb-3">
+                        Fixed and variable mortgage loan schemes with maximum repayment terms up to 40 years. Transparent pricing with no upfront broker valuation fees.
+                    </p>
+                    <div class="bg-dark bg-opacity-25 rounded-3 p-3 border border-white border-opacity-10 mb-3">
+                        <div class="d-flex justify-content-between text-white small mb-1">
+                            <span>Active Schemes</span>
+                            <span class="fw-bold text-warning">{{ stats.total_schemes }} Available</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-white small mb-1">
+                            <span>Average Benchmark Rate</span>
+                            <span class="fw-bold">{{ stats.avg_rate|floatformat:2 }}%</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-white small">
+                            <span>AI Decision Engine</span>
+                            <span class="fw-bold text-success"><i class="fa-solid fa-circle text-success fa-2xs"></i> Active</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'apply-mortgage' %}" class="btn btn-warning w-100 py-2 fw-bold text-dark">
+                        <i class="fa-solid fa-arrow-right me-1"></i> Apply for Mortgage
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS COUNTER BAR -->
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">£185M+</div>
+                <div class="small text-muted mt-1 fw-semibold">Capital Financed</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">99.4%</div>
+                <div class="small text-muted mt-1 fw-semibold">Underwriting Accuracy</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">15 Min</div>
+                <div class="small text-muted mt-1 fw-semibold">Avg. AI Pre-Approval</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">100%</div>
+                <div class="small text-muted mt-1 fw-semibold">Bank API Integration</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INTERACTIVE MORTGAGE CALCULATOR SECTION -->
+    <div id="calculator-section" class="calculator-card p-4 p-lg-5 mb-5">
+        <div class="row align-items-center mb-4">
+            <div class="col-md-8">
+                <span class="badge bg-warning-subtle text-warning fw-bold px-3 py-1 mb-2">LIVE AMORTISATION SIMULATOR</span>
+                <h2 class="fw-bold text-navy" style="color: var(--sun-navy);">Calculate Your Monthly Mortgage Repayments</h2>
+                <p class="text-secondary small mb-0">
+                    Adjust the sliders below to estimate your fixed monthly repayment, total loan liability, and cumulative interest using UK banking standard compound amortisation.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'repayment-estimator' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fa-solid fa-table-list me-1"></i> Full Amortisation Schedule
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Inputs -->
+            <div class="col-lg-7">
+                <!-- Principal Slider -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold mb-0">Mortgage Loan Amount</label>
+                        <span class="fw-bold fs-5 text-navy" id="display-principal">£250,000</span>
+                    </div>
+                    <input type="range" class="form-range" id="range-principal" min="25000" max="1500000" step="5000" value="250000" oninput="updateCalculator()">
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>£25,000</span>
+                        <span>£750,000</span>
+                        <span>£1,500,000</span>
+                    </div>
+                </div>
+
+                <!-- Term Slider -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold mb-0">Duration Term</label>
+                        <span class="fw-bold fs-5 text-navy" id="display-term">25 Years</span>
+                    </div>
+                    <input type="range" class="form-range" id="range-term" min="5" max="40" step="1" value="25" oninput="updateCalculator()">
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>5 Years</span>
+                        <span>25 Years</span>
+                        <span>40 Years</span>
+                    </div>
+                </div>
+
+                <!-- Interest Rate Slider -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold mb-0">Annual Interest Rate</label>
+                        <span class="fw-bold fs-5 text-navy" id="display-rate">4.50%</span>
+                    </div>
+                    <input type="range" class="form-range" id="range-rate" min="1.00" max="12.00" step="0.05" value="4.50" oninput="updateCalculator()">
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>1.00%</span>
+                        <span>6.00%</span>
+                        <span>12.00%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Box -->
+            <div class="col-lg-5">
+                <div class="p-4 rounded-4 text-center h-100 d-flex flex-direction-column justify-content-between"
+                     style="background: linear-gradient(145deg, #f8fafc 0%, #edf2f7 100%); border: 2px dashed #cbd5e1; flex-direction: column;">
+                    <div>
+                        <small class="text-uppercase text-muted fw-bold d-block mb-1">Estimated Monthly Payment</small>
+                        <div class="fs-1 fw-bold text-success mb-3" id="calc-monthly">£1,389.58</div>
+
+                        <div class="row g-2 text-start mb-4">
+                            <div class="col-6">
+                                <div class="p-2 bg-white rounded border">
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Total Loan Cost</small>
+                                    <span class="fw-bold small text-navy" id="calc-total">£416,874.00</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-white rounded border">
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Total Interest</small>
+                                    <span class="fw-bold small text-danger" id="calc-interest">£166,874.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Ratio Bar -->
+                        <div class="mb-3 text-start">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Principal (<span id="principal-pct">60</span>%)</span>
+                                <span>Interest (<span id="interest-pct">40</span>%)</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div id="bar-principal" class="progress-bar bg-primary" role="progressbar" style="width: 60%"></div>
+                                <div id="bar-interest" class="progress-bar bg-warning" role="progressbar" style="width: 40%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <a href="{% url 'apply-mortgage' %}" class="btn btn-sun-primary w-100 py-2 shadow-sm mb-2">
+                            <i class="fa-solid fa-paper-plane me-1"></i> Apply for this Loan Amount
+                        </a>
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">
+                            Subject to status and credit underwriting. Calculations exclude insurance fees.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVE MORTGAGE SCHEMES GRID -->
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-1 mb-2">FINANCING PRODUCTS</span>
+                <h2 class="fw-bold text-navy" style="color: var(--sun-navy);">Featured Loan &amp; Development Schemes</h2>
+                <p class="text-secondary small mb-0">Transparent terms for first-time buyers, buy-to-let investors, and commercial property developers.</p>
+            </div>
+            <a href="{% url 'product-list' %}" class="btn btn-outline-secondary btn-sm d-none d-md-inline-block">
+                View All {{ stats.total_schemes }} Schemes <i class="fa-solid fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for p in products %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="scheme-card p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small">
+                                <i class="fa-solid fa-bolt me-1"></i> Verified Active
+                            </span>
+                            <div class="text-end">
+                                <div class="fs-4 fw-bold text-navy" style="color: var(--sun-navy); line-height: 1;">
+                                    {{ p.annual_interest_rate }}%
+                                </div>
+                                <small class="text-muted" style="font-size: 0.72rem;">Fixed Rate p.a.</small>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold text-navy mb-2" style="color: var(--sun-navy);">{{ p.name }}</h5>
+                        <p class="text-secondary small mb-3 flex-grow-1">
+                            {{ p.description|default:"Comprehensive fixed and amortised mortgage facility with flexible repayment options and zero redemption penalties."|truncatewords:20 }}
+                        </p>
+
+                        <div class="bg-light p-3 rounded-3 mb-3 border">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Loan Limits:</span>
+                                <span class="fw-semibold text-dark">£{{ p.minimum_amount|floatformat:0 }} - £{{ p.maximum_amount|floatformat:0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted">
+                                <span>Max Term:</span>
+                                <span class="fw-semibold text-dark">{{ p.maximum_term_years }} Years</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'apply-mortgage' %}?product={{ p.id }}" class="btn btn-sun-primary btn-sm flex-grow-1">
+                                <i class="fa-solid fa-check me-1"></i> Apply Scheme
+                            </a>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="sendQuickPrompt('Tell me about the {{ p.name }} scheme at {{ p.annual_interest_rate }}%')">
+                                <i class="fa-solid fa-robot text-warning"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">No mortgage products configured yet.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- PLATFORM HIGHLIGHTS -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card card-sun h-100 p-4 border-0 shadow-sm" style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%);">
+                <div class="d-inline-flex p-3 rounded-circle bg-warning-subtle text-warning mb-3" style="width: 54px; height: 54px; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-robot fa-xl"></i>
+                </div>
+                <h5 class="fw-bold text-navy" style="color: var(--sun-navy);">Gemini AI Underwriter</h5>
+                <p class="text-secondary small mb-0">
+                    SunMortgages leverages Google Gemini 3.5 AI to analyze debt serviceability, detect potential affordability bottlenecks, and provide underwriters with instantaneous risk assessment dossiers.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-sun h-100 p-4 border-0 shadow-sm" style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%);">
+                <div class="d-inline-flex p-3 rounded-circle bg-primary-subtle text-primary mb-3" style="width: 54px; height: 54px; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-building-columns fa-xl"></i>
+                </div>
+                <h5 class="fw-bold text-navy" style="color: var(--sun-navy);">Open Banking Gateway</h5>
+                <p class="text-secondary small mb-0">
+                    Connect and verify applicant bank accounts in real time. Validate sort codes, account numbers, and credit scores with automated API health monitoring and latency auditing.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-sun h-100 p-4 border-0 shadow-sm" style="background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%);">
+                <div class="d-inline-flex p-3 rounded-circle bg-success-subtle text-success mb-3" style="width: 54px; height: 54px; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-helmet-safety fa-xl"></i>
+                </div>
+                <h5 class="fw-bold text-navy" style="color: var(--sun-navy);">Property Developer Pipeline</h5>
+                <p class="text-secondary small mb-0">
+                    Dedicated commercial loan facilities designed specifically for property developers and contractors undertaking phased multi-unit residential and commercial construction schemes.
+                </p>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateCalculator() {
+        const principal = parseFloat(document.getElementById('range-principal').value);
+        const termYears = parseInt(document.getElementById('range-term').value);
+        const annualRate = parseFloat(document.getElementById('range-rate').value);
+
+        // Update display text
+        document.getElementById('display-principal').innerText = '£' + principal.toLocaleString('en-GB');
+        document.getElementById('display-term').innerText = termYears + ' Years';
+        document.getElementById('display-rate').innerText = annualRate.toFixed(2) + '%';
+
+        const totalMonths = termYears * 12;
+        let monthlyPayment = 0;
+        let totalCost = 0;
+        let totalInterest = 0;
+
+        if (annualRate <= 0) {
+            monthlyPayment = principal / totalMonths;
+            totalCost = principal;
+            totalInterest = 0;
+        } else {
+            const monthlyRate = (annualRate / 100) / 12;
+            const factor = Math.pow(1 + monthlyRate, totalMonths);
+            monthlyPayment = principal * (monthlyRate * factor) / (factor - 1);
+            totalCost = monthlyPayment * totalMonths;
+            totalInterest = totalCost - principal;
+        }
+
+        // Format and render
+        document.getElementById('calc-monthly').innerText = '£' + monthlyPayment.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('calc-total').innerText = '£' + totalCost.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('calc-interest').innerText = '£' + totalInterest.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Update progress bar
+        const principalPct = Math.round((principal / totalCost) * 100);
+        const interestPct = 100 - principalPct;
+        document.getElementById('principal-pct').innerText = principalPct;
+        document.getElementById('interest-pct').innerText = interestPct;
+        document.getElementById('bar-principal').style.width = principalPct + '%';
+        document.getElementById('bar-interest').style.width = interestPct + '%';
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', updateCalculator);
+</script>
+{% endblock %}

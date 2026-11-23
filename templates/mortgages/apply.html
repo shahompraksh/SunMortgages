@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Apply for Mortgage | SunMortgages{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-lg-7">
+        <div class="card card-sun shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-file-signature me-2 text-primary"></i>Mortgage Application</span>
+                <span class="badge bg-light text-dark border">{{ user.username }} ({{ user.get_role_display }})</span>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-4">
+                    Please select your preferred mortgage scheme, input the requested loan capital, and select your repayment term.
+                </p>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text small text-muted">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1"><i class="fa-solid fa-circle-exclamation me-1"></i>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="p-3 bg-light rounded text-muted small my-3 border">
+                        <i class="fa-solid fa-circle-info text-primary me-1"></i>
+                        Submitted applications undergo underwriting risk evaluation, income validation, and bank clearing assessment. You can track progress in your application ledger.
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{% url 'product-list' %}" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Back to Products
+                        </a>
+                        <button type="submit" class="btn btn-sun-primary py-2 px-4 shadow-sm">
+                            <i class="fa-solid fa-paper-plane me-1"></i> Submit Mortgage Application
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

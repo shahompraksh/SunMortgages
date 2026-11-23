@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Banking Gateway &amp; API Integration | SunMortgages{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-navy mb-1" style="color: var(--sun-navy);">
+            <i class="fa-solid fa-network-wired text-warning me-2"></i>Banking Gateway &amp; Open APIs
+        </h2>
+        <p class="text-muted mb-0">
+            Modular financial interface connecting SunMortgages to interbank settlement and credit bureau networks.
+        </p>
+    </div>
+    <div>
+        <span class="badge bg-warning text-dark px-3 py-2 fs-6 shadow-sm">
+            <i class="fa-solid fa-vial me-1"></i> Sandbox / Mock Integration Active
+        </span>
+    </div>
+</div>
+
+<!-- Notice Callout -->
+<div class="alert alert-info border-0 shadow-sm mb-4">
+    <div class="d-flex align-items-center">
+        <i class="fa-solid fa-circle-info fa-2x text-primary me-3"></i>
+        <div>
+            <strong>Architecture Notice:</strong>
+            This module implements a production-ready, pluggable gateway structure. For university demonstration and testing, it communicates with clearly labelled simulated endpoints (simulating UK Open Banking Directory APIs and Clearing Bank networks). Official lender credentials can be injected via environment variables without altering application business logic.
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Partners & Live Rate Benchmark -->
+    <div class="col-lg-6">
+        <!-- Connected Providers Card -->
+        <div class="card card-sun">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-building-columns me-2 text-primary"></i>Connected Banking Partners</span>
+                <span class="badge bg-success">100% Operational</span>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for partner in partners %}
+                        <div class="list-group-item d-flex justify-content-between align-items-start px-0 py-3">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold text-navy">{{ partner.name }}</div>
+                                <small class="text-muted">Code: <code>{{ partner.code }}</code> | Base: <code>{{ partner.base_url }}</code></small>
+                                <div class="mt-1">
+                                    <span class="badge bg-light text-dark border">Services: {{ partner.supported_services }}</span>
+                                </div>
+                            </div>
+                            <span class="badge {% if partner.is_mock %}bg-secondary{% else %}bg-success{% endif %} rounded-pill">
+                                {% if partner.is_mock %}Mock Sandbox{% else %}Live API{% endif %}
+                            </span>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">No partners registered.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Benchmark Mortgage Interest Rates -->
+        <div class="card card-sun">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-percent me-2 text-warning"></i>Commercial Bank Benchmark Mortgage Rates</span>
+                <form method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="sync_rates">
+                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                        <i class="fa-solid fa-rotate me-1"></i> Sync Rates
+                    </button>
+                </form>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Institution</th>
+                                <th class="text-end">Base Rate</th>
+                                <th class="text-end">Premium Spread</th>
+                                <th class="text-end">Effective Mortgage Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in market_rates %}
+                                <tr>
+                                    <td class="fw-semibold">{{ r.bank }}</td>
+                                    <td class="text-end">{{ r.base_rate }}%</td>
+                                    <td class="text-end">+{{ r.mortgage_spread }}%</td>
+                                    <td class="text-end fw-bold text-success">{{ r.effective_rate }}%</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Interactive Sandbox Verification & Testing -->
+    <div class="col-lg-6">
+        <!-- Account Verification Sandbox Form -->
+        <div class="card card-sun">
+            <div class="card-header">
+                <i class="fa-solid fa-id-card-clip me-2 text-success"></i>Interactive Account Verification Simulator
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-3">
+                    Test bank account validation queries against the simulated clearing house. Accounts ending in <code>0000</code> simulate verification rejections; all other valid accounts return an authorized verification token.
+                </p>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="verify_test">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Financial Institution</label>
+                        <select name="bank_name" class="form-select">
+                            <option value="Barclays Bank UK">Barclays Bank UK</option>
+                            <option value="HSBC UK Commercial">HSBC UK Commercial</option>
+                            <option value="Lloyds Banking Group">Lloyds Banking Group</option>
+                            <option value="NatWest Interbank">NatWest Interbank</option>
+                            <option value="Santander UK Mortgages">Santander UK Mortgages</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Account Number</label>
+                            <input type="text" name="account_number" class="form-control" placeholder="e.g. 012345678901" value="012489230192" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Account Holder Name</label>
+                            <input type="text" name="account_name" class="form-control" placeholder="e.g. Sarah Jenkins" value="Sarah Jenkins" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-sun-primary w-100">
+                        <i class="fa-solid fa-bolt me-1"></i> Send Verification Request
+                    </button>
+                </form>
+
+                {% if test_result %}
+                    <div class="mt-3 p-3 rounded {% if test_result.success %}bg-success-subtle text-success-emphasis border border-success{% else %}bg-danger-subtle text-danger-emphasis border border-danger{% endif %}">
+                        <h6 class="fw-bold mb-1">
+                            <i class="fa-solid {% if test_result.success %}fa-circle-check{% else %}fa-circle-xmark{% endif %} me-1"></i>
+                            Verification Outcome: {% if test_result.success %}VERIFIED{% else %}REJECTED{% endif %}
+                        </h6>
+                        <small>
+                            Bank: <strong>{{ test_result.bank_name }}</strong> |
+                            Account: <code>{{ test_result.account_number }}</code> |
+                            Latency: <strong>{{ test_result.latency_ms }} ms</strong><br>
+                            {% if test_result.reference %}
+                                Reference ID: <code>{{ test_result.reference }}</code>
+                            {% endif %}
+                        </small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- REST API Endpoints Quick Reference -->
+        <div class="card card-sun">
+            <div class="card-header">
+                <i class="fa-solid fa-code me-2 text-secondary"></i>Programmatic REST API Endpoints
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush font-monospace small">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><span class="badge bg-primary me-2">POST</span>/banking/api/account-verify/</span>
+                        <span class="text-muted">Account lookup</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><span class="badge bg-success me-2">GET</span>/banking/api/rates/</span>
+                        <span class="text-muted">Mortgage rates</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><span class="badge bg-primary me-2">POST</span>/banking/api/credit-score/</span>
+                        <span class="text-muted">DTI &amp; Risk score</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Section: API Request Audit Log -->
+<div class="card card-sun mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fa-solid fa-list-check me-2 text-primary"></i>Recent Banking API Audit Logs</span>
+        <span class="badge bg-light text-dark border">Auto-recorded</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0 font-monospace small">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Method</th>
+                        <th>Endpoint</th>
+                        <th>Status</th>
+                        <th>Latency</th>
+                        <th>Request / Response Summary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                            <td><span class="badge {% if log.method == 'POST' %}bg-primary{% else %}bg-info text-dark{% endif %}">{{ log.method }}</span></td>
+                            <td class="text-truncate" style="max-width: 250px;">{{ log.endpoint }}</td>
+                            <td>
+                                {% if log.status_code == 200 %}
+                                    <span class="badge bg-success">200 OK</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ log.status_code }} ERR</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.response_time_ms }} ms</td>
+                            <td class="text-truncate" style="max-width: 350px;">
+                                <span class="text-muted">{{ log.request_summary }}</span> &rarr;
+                                <span class="fw-semibold">{{ log.response_summary }}</span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No API request logs recorded yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,222 @@
+<!-- SunMortgages Floating AI Advisor Chatbot Component -->
+<div id="sun-ai-widget-container" style="position: fixed; bottom: 25px; right: 25px; z-index: 1050; font-family: inherit;">
+
+    <!-- Floating Trigger Button -->
+    <button id="sun-ai-trigger" class="btn btn-warning rounded-pill shadow-lg d-flex align-items-center gap-2 px-3 py-2 border-2 border-white"
+            style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: #ffffff; font-weight: 600; box-shadow: 0 8px 24px rgba(243, 156, 18, 0.45); transition: transform 0.2s ease;"
+            onclick="toggleSunAIChat()">
+        <span class="d-inline-flex justify-content-center align-items-center bg-white rounded-circle text-warning" style="width: 28px; height: 28px; font-size: 14px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </span>
+        <span class="d-none d-sm-inline">Ask SunMortgages AI</span>
+        <span class="badge bg-dark text-warning rounded-pill px-2 py-1 small" style="font-size: 0.65rem; letter-spacing: 0.5px;">GEMINI 3.5</span>
+    </button>
+
+    <!-- Chat Modal Window -->
+    <div id="sun-ai-chatbox" class="card shadow-lg border-0"
+         style="display: none; width: 380px; max-width: calc(100vw - 30px); height: 530px; border-radius: 16px; overflow: hidden; box-shadow: 0 16px 40px rgba(15, 36, 62, 0.25);">
+        
+        <!-- Chat Header -->
+        <div class="card-header d-flex justify-content-between align-items-center py-3 px-3 text-white"
+             style="background: linear-gradient(135deg, var(--sun-navy) 0%, var(--sun-navy-dark) 100%); border-bottom: 2px solid var(--sun-gold);">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-warning text-navy rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background-color: var(--sun-gold) !important; color: var(--sun-navy);">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold text-white fs-6">SunMortgages AI Advisor</h6>
+                    <small class="text-warning d-flex align-items-center gap-1" style="font-size: 0.72rem;">
+                        <span class="spinner-grow spinner-grow-sm text-success" role="status" style="width: 7px; height: 7px;"></span>
+                        Gemini 3.5 Live Advisor
+                    </small>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-link text-white-50 p-1" onclick="toggleSunAIChat()" title="Minimize">
+                <i class="fa-solid fa-xmark fs-5"></i>
+            </button>
+        </div>
+
+        <!-- Chat Body Messages -->
+        <div id="sun-ai-messages" class="card-body p-3 overflow-y-auto" style="height: 380px; background-color: #f8fafc; font-size: 0.88rem; scroll-behavior: smooth;">
+            
+            <!-- AI Welcome Message -->
+            <div class="d-flex gap-2 mb-3">
+                <div class="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width: 28px; height: 28px; background: var(--sun-navy); font-size: 11px;">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <div class="bg-white p-3 rounded-3 shadow-sm border text-dark" style="max-width: 85%; border-top-left-radius: 4px !important;">
+                    <p class="mb-1 fw-semibold text-navy" style="color: var(--sun-navy);">Welcome to SunMortgages!</p>
+                    <p class="mb-2 text-secondary small">
+                        I am your dedicated AI Mortgage Consultant. I can calculate loan repayments, explain fixed vs variable rates, recommend active schemes, or guide property developers.
+                    </p>
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill small" style="font-size: 0.75rem;" onclick="sendQuickPrompt('What active schemes are currently available?')">
+                            Available Schemes
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill small" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Calculate monthly repayment for £300,000 over 25 years at 4.5%')">
+                            Repayment Example
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning py-0 px-2 rounded-pill small text-dark" style="font-size: 0.75rem;" onclick="sendQuickPrompt('What are the developer commercial loan terms?')">
+                            Developer Loans
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Typing Indicator (hidden initially) -->
+        <div id="sun-ai-typing" class="px-3 py-1 bg-light border-top text-muted small d-none align-items-center gap-2" style="font-size: 0.75rem;">
+            <div class="spinner-border spinner-border-sm text-warning" role="status" style="width: 12px; height: 12px;"></div>
+            <span>AI Advisor is analyzing schemes and composing guidance...</span>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="card-footer p-2 bg-white border-top">
+            <form id="sun-ai-form" onsubmit="handleSunAISubmit(event)" class="d-flex gap-2">
+                <input type="text" id="sun-ai-input" class="form-control form-control-sm border-1"
+                       placeholder="Ask about rates, schemes, or repayments..." autocomplete="off" required
+                       style="border-radius: 20px; padding-left: 14px; font-size: 0.85rem;">
+                <button type="submit" id="sun-ai-send-btn" class="btn btn-sm btn-warning rounded-circle d-flex align-items-center justify-content-center text-white"
+                        style="width: 34px; height: 34px; background: var(--sun-gold); border: none;">
+                    <i class="fa-solid fa-paper-plane fa-sm"></i>
+                </button>
+            </form>
+            <div class="text-center mt-1" style="font-size: 0.65rem; color: #a0aec0;">
+                Regulated guidance | Powered by Google Gemini 3.5 AI
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let sunAIHistory = [];
+
+    function toggleSunAIChat() {
+        const chatbox = document.getElementById('sun-ai-chatbox');
+        const trigger = document.getElementById('sun-ai-trigger');
+        if (chatbox.style.display === 'none' || chatbox.style.display === '') {
+            chatbox.style.display = 'flex';
+            chatbox.style.flexDirection = 'column';
+            trigger.style.display = 'none';
+            document.getElementById('sun-ai-input').focus();
+        } else {
+            chatbox.style.display = 'none';
+            trigger.style.display = 'flex';
+        }
+    }
+
+    function sendQuickPrompt(promptText) {
+        document.getElementById('sun-ai-input').value = promptText;
+        handleSunAISubmit(new Event('submit'));
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function formatAIMarkdown(text) {
+        // Simple client-side formatting for clean HTML output
+        let html = text
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n- (.*?)(?=\n|$)/g, '<br>• $1')
+            .replace(/\n\n/g, '<br><br>')
+            .replace(/\n/g, '<br>');
+        return html;
+    }
+
+    async function handleSunAISubmit(e) {
+        e.preventDefault();
+        const inputElem = document.getElementById('sun-ai-input');
+        const userText = inputElem.value.trim();
+        if (!userText) return;
+
+        const messagesContainer = document.getElementById('sun-ai-messages');
+        const typingElem = document.getElementById('sun-ai-typing');
+        const sendBtn = document.getElementById('sun-ai-send-btn');
+
+        // Append User Message Bubble
+        const userDiv = document.createElement('div');
+        userDiv.className = 'd-flex justify-content-end mb-3';
+        userDiv.innerHTML = `
+            <div class="p-3 rounded-3 text-white shadow-sm" style="background: var(--sun-navy); max-width: 82%; border-top-right-radius: 4px !important; font-size: 0.88rem;">
+                ${userText.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+            </div>
+        `;
+        messagesContainer.appendChild(userDiv);
+        inputElem.value = '';
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // Show typing indicator
+        typingElem.classList.remove('d-none');
+        typingElem.classList.add('d-flex');
+        sendBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/ai/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') || ''
+                },
+                body: JSON.stringify({
+                    message: userText,
+                    history: sunAIHistory
+                })
+            });
+
+            const data = await response.json();
+            typingElem.classList.remove('d-flex');
+            typingElem.classList.add('d-none');
+            sendBtn.disabled = false;
+
+            if (data.status === 'success' || data.status === 'fallback') {
+                const aiDiv = document.createElement('div');
+                aiDiv.className = 'd-flex gap-2 mb-3';
+                aiDiv.innerHTML = `
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 28px; height: 28px; background: var(--sun-navy); font-size: 11px;">
+                        <i class="fa-solid fa-brain text-warning"></i>
+                    </div>
+                    <div class="bg-white p-3 rounded-3 shadow-sm border text-dark" style="max-width: 85%; border-top-left-radius: 4px !important; line-height: 1.45;">
+                        ${formatAIMarkdown(data.reply)}
+                    </div>
+                `;
+                messagesContainer.appendChild(aiDiv);
+
+                // Update history
+                sunAIHistory.push({ role: 'user', text: userText });
+                sunAIHistory.push({ role: 'model', text: data.reply });
+                if (sunAIHistory.length > 8) sunAIHistory = sunAIHistory.slice(-8);
+            } else {
+                throw new Error(data.message || 'Error from AI server');
+            }
+        } catch (err) {
+            typingElem.classList.remove('d-flex');
+            typingElem.classList.add('d-none');
+            sendBtn.disabled = false;
+
+            const errDiv = document.createElement('div');
+            errDiv.className = 'alert alert-danger py-2 small mb-3';
+            errDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation me-1"></i> Could not reach SunMortgages AI service. Please check your network connection.`;
+            messagesContainer.appendChild(errDiv);
+        }
+
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+</script>

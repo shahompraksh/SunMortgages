@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Executive Reports &amp; Financial Analytics | SunMortgages{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1" style="color: var(--sun-navy);">
+            <i class="fa-solid fa-chart-line text-warning me-2"></i>Executive Reports &amp; Analytics
+        </h2>
+        <p class="text-muted mb-0">Underwriting statistics, application pipeline volume, and regulatory data exports.</p>
+    </div>
+    <div class="btn-group shadow-sm">
+        <a href="{% url 'export-applications-csv' %}" class="btn btn-outline-success">
+            <i class="fa-solid fa-file-csv me-1"></i> Export Applications (CSV)
+        </a>
+        <a href="{% url 'export-customers-csv' %}" class="btn btn-outline-primary">
+            <i class="fa-solid fa-file-csv me-1"></i> Export Customers (CSV)
+        </a>
+        <a href="{% url 'print-applications-report' %}" target="_blank" class="btn btn-sun-primary">
+            <i class="fa-solid fa-print me-1"></i> Print / PDF Report
+        </a>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="card card-sun mb-4">
+    <div class="card-body py-3">
+        <form method="GET" class="row g-3 align-items-center">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold mb-1">Filter by Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">-- All Application Statuses --</option>
+                    {% for code, label in statuses %}
+                        <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold mb-1">Filter by Customer Category</label>
+                <select name="customer_type" class="form-select form-select-sm">
+                    <option value="">-- All Customer Types --</option>
+                    {% for code, label in customer_types %}
+                        <option value="{{ code }}" {% if customer_type_filter == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-sun-primary btn-sm me-2">
+                    <i class="fa-solid fa-filter me-1"></i> Apply Filters
+                </button>
+                <a href="{% url 'reports-dashboard' %}" class="btn btn-light btn-sm border">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Financial KPI Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card card-sun metric-card h-100 p-3">
+            <small class="text-muted text-uppercase fw-semibold">Total Application Volume</small>
+            <h3 class="fw-bold mt-2 text-navy mb-0">£{{ total_requested_volume|floatformat:2 }}</h3>
+            <span class="small text-muted mt-1">{{ total_apps_count }} applications submitted</span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-sun metric-card success h-100 p-3">
+            <small class="text-muted text-uppercase fw-semibold">Approved Mortgage Capital</small>
+            <h3 class="fw-bold mt-2 text-success mb-0">£{{ approved_volume|floatformat:2 }}</h3>
+            <span class="small text-muted mt-1">Capital committed to approved borrowers</span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-sun metric-card gold h-100 p-3">
+            <small class="text-muted text-uppercase fw-semibold">Active Pipeline Allocation</small>
+            <h3 class="fw-bold mt-2 text-warning mb-0">
+                {% widthratio approved_volume total_requested_volume 100 %}%
+            </h3>
+            <span class="small text-muted mt-1">Ratio of approved capital to requested volume</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Product Performance Breakdown -->
+    <div class="col-lg-7">
+        <div class="card card-sun h-100">
+            <div class="card-header">
+                <i class="fa-solid fa-layer-group me-2 text-primary"></i>Mortgage Product Performance
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product Name</th>
+                                <th class="text-center">Interest Rate</th>
+                                <th class="text-center">Applications</th>
+                                <th class="text-end">Total Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in product_stats %}
+                                <tr>
+                                    <td class="fw-semibold">{{ p.name }}</td>
+                                    <td class="text-center">{{ p.annual_interest_rate }}%</td>
+                                    <td class="text-center"><span class="badge bg-light text-dark border">{{ p.app_count }}</span></td>
+                                    <td class="text-end fw-bold text-navy">£{{ p.total_volume|default:0|floatformat:2 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No mortgage products available.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Status Breakdown -->
+    <div class="col-lg-5">
+        <div class="card card-sun h-100">
+            <div class="card-header">
+                <i class="fa-solid fa-pie-chart me-2 text-warning"></i>Status Distribution
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><span class="badge badge-submitted me-2">&bull;</span>Submitted (New)</span>
+                        <span class="fw-bold">{{ status_counts.SUBMITTED|default:0 }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><span class="badge badge-under-review me-2">&bull;</span>Underwriting Review</span>
+                        <span class="fw-bold">{{ status_counts.UNDER_REVIEW|default:0 }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><span class="badge badge-approved me-2">&bull;</span>Approved &amp; Issued</span>
+                        <span class="fw-bold text-success">{{ status_counts.APPROVED|default:0 }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><span class="badge badge-rejected me-2">&bull;</span>Declined / Rejected</span>
+                        <span class="fw-bold text-danger">{{ status_counts.REJECTED|default:0 }}</span>
+                    </li>
+                </ul>
+
+                <div class="p-3 bg-light rounded text-center small text-muted border">
+                    <i class="fa-solid fa-shield-halved me-1 text-primary"></i> Data is verified against the PostgreSQL relational ledger with audit trails.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

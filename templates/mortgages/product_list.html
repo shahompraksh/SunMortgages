@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Mortgage Products &amp; Schemes | SunMortgages{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1" style="color: var(--sun-navy);">
+            <i class="fa-solid fa-landmark text-warning me-2"></i>Mortgage Products &amp; Schemes
+        </h2>
+        <p class="text-muted mb-0">Competitive fixed and commercial development financing schemes.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'repayment-estimator' %}" class="btn btn-outline-primary btn-sm">
+            <i class="fa-solid fa-calculator me-1"></i> Repayment Estimator
+        </a>
+        {% if user.is_staff or user.role == "STAFF" %}
+            <a href="{% url 'product-manage' %}" class="btn btn-sun-gold btn-sm">
+                <i class="fa-solid fa-gear me-1"></i> Staff Product Manager
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for product in products %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card card-sun h-100 d-flex flex-column border-top border-4 border-primary">
+                <div class="card-body d-flex flex-column p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold text-navy mb-0">{{ product.name }}</h5>
+                        <span class="badge bg-success-subtle text-success border border-success">Active</span>
+                    </div>
+
+                    <p class="text-muted small flex-grow-1 mt-2">{{ product.description }}</p>
+
+                    <div class="p-3 bg-light rounded-3 my-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small text-muted">Annual Interest Rate</span>
+                            <span class="fs-4 fw-bold text-success">{{ product.annual_interest_rate }}%</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Min Amount:</span>
+                            <span class="fw-semibold text-dark">£{{ product.minimum_amount|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Max Amount:</span>
+                            <span class="fw-semibold text-dark">£{{ product.maximum_amount|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Max Duration:</span>
+                            <span class="fw-semibold text-dark">{{ product.maximum_term_years }} Years</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto">
+                        {% if user.is_authenticated and user.role != "STAFF" %}
+                            <a href="{% url 'apply-mortgage' %}?product={{ product.id }}" class="btn btn-sun-primary w-100">
+                                <i class="fa-solid fa-paper-plane me-1"></i> Apply for this Scheme
+                            </a>
+                        {% elif not user.is_authenticated %}
+                            <a href="{% url 'login' %}" class="btn btn-outline-primary w-100">
+                                <i class="fa-solid fa-right-to-bracket me-1"></i> Sign In to Apply
+                            </a>
+                        {% else %}
+                            <a href="{% url 'product-edit' product.id %}" class="btn btn-outline-secondary w-100 btn-sm">
+                                <i class="fa-solid fa-pen me-1"></i> Edit Scheme (Staff)
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fa-solid fa-building-circle-xmark fa-3x text-muted mb-3 d-block"></i>
+            <h5 class="text-muted">No mortgage products are currently open for public applications.</h5>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Underwriting Pipeline &amp; Applications | SunMortgages{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1" style="color: var(--sun-navy);">
+            <i class="fa-solid fa-file-invoice-dollar text-warning me-2"></i>Mortgage Underwriting Pipeline
+        </h2>
+        <p class="text-muted mb-0">Staff portfolio of borrower requests, credit verification assessments, and loan decisions.</p>
+    </div>
+    <div>
+        <a href="{% url 'export-applications-csv' %}" class="btn btn-outline-success btn-sm">
+            <i class="fa-solid fa-file-csv me-1"></i> Export Applications (CSV)
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter Card -->
+<div class="card card-sun mb-4">
+    <div class="card-body py-3">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <input type="search" name="q" value="{{ query }}" class="form-control" placeholder="Search by customer username...">
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select">
+                    <option value="">-- Filter by Status (All) --</option>
+                    {% for code, label in statuses %}
+                        <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-sun-primary w-100">Filter</button>
+                {% if query or status_filter %}
+                    <a href="{% url 'application-list' %}" class="btn btn-light border">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Applications Table -->
+<div class="card card-sun">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fa-solid fa-list-check me-2 text-primary"></i>Application Records</span>
+        <span class="badge bg-light text-dark border">{{ applications.count }} applications</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ref #</th>
+                        <th>Applicant</th>
+                        <th>Type</th>
+                        <th>Product Scheme</th>
+                        <th class="text-end">Requested Capital</th>
+                        <th class="text-center">Term</th>
+                        <th class="text-center">Status</th>
+                        <th>Date</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                        <tr>
+                            <td><code>#{{ app.id }}</code></td>
+                            <td>
+                                <strong>{{ app.customer.user.username }}</strong><br>
+                                <small class="text-muted">{{ app.customer.user.email }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ app.customer.get_customer_type_display }}</span>
+                            </td>
+                            <td class="fw-semibold text-navy">{{ app.product.name }}</td>
+                            <td class="text-end fw-bold">£{{ app.requested_amount|floatformat:2 }}</td>
+                            <td class="text-center">{{ app.term_years }} yrs</td>
+                            <td class="text-center">
+                                <span class="badge {% if app.status == 'APPROVED' %}badge-approved{% elif app.status == 'REJECTED' %}badge-rejected{% elif app.status == 'UNDER_REVIEW' %}badge-under-review{% else %}badge-submitted{% endif %} px-2 py-1">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ app.submitted_at|date:"d M Y" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'application-detail' app.pk %}" class="btn btn-sm btn-sun-primary">
+                                    <i class="fa-solid fa-magnifying-glass me-1"></i> Underwrite
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                No mortgage applications match your filter.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

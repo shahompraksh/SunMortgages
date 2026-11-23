@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Mortgage Repayment Calculator | SunMortgages{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-lg-9 col-xl-8">
+        <div class="card card-sun shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fa-solid fa-calculator text-warning me-2"></i>Mortgage Amortisation Repayment Calculator
+                </span>
+                <span class="badge bg-light text-dark border">Decimal Precision</span>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <p class="text-muted small mb-4">
+                    Estimate your monthly commitment and cumulative interest liabilities based on standard fixed-payment amortisation formulas.
+                </p>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Loan Amount (£)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">£</span>
+                                <input type="number" name="amount" value="{{ amount_input }}" min="1" step="0.01" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Annual Interest Rate (%)</label>
+                            <div class="input-group">
+                                <input type="number" name="rate" value="{{ rate_input }}" min="0" max="100" step="0.01" class="form-control" required>
+                                <span class="input-group-text bg-light">%</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Repayment Term (Years)</label>
+                            <div class="input-group">
+                                <input type="number" name="years" value="{{ years_input }}" min="1" max="50" class="form-control" required>
+                                <span class="input-group-text bg-light">Yrs</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-sun-primary w-100 py-2 shadow-sm">
+                        <i class="fa-solid fa-calculator me-1"></i> Compute Amortisation Schedule
+                    </button>
+                </form>
+
+                {% if calculation %}
+                    <hr class="my-4">
+
+                    <!-- Results Card -->
+                    <div class="p-4 rounded-3 bg-light border border-primary-subtle shadow-sm">
+                        <div class="text-center mb-4">
+                            <small class="text-muted text-uppercase fw-semibold d-block">Estimated Monthly Commitment</small>
+                            <h1 class="display-5 fw-bold text-success mb-0">£{{ calculation.monthly_payment|floatformat:2 }}</h1>
+                            <small class="text-muted">Calculated for {{ calculation.years }} years at {{ calculation.annual_rate }}% per annum</small>
+                        </div>
+
+                        <div class="row g-3 text-center pt-3 border-top">
+                            <div class="col-md-4">
+                                <small class="text-muted d-block text-uppercase">Principal Loan</small>
+                                <span class="fs-5 fw-bold text-navy">£{{ calculation.principal|floatformat:2 }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block text-uppercase">Total Interest Payable</small>
+                                <span class="fs-5 fw-bold text-danger">£{{ calculation.total_interest|floatformat:2 }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block text-uppercase">Total Amount Repaid</small>
+                                <span class="fs-5 fw-bold text-dark">£{{ calculation.total_payment|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Academic / Compliance Notice -->
+                <div class="alert alert-secondary mt-4 mb-0 small text-muted border-0 bg-light">
+                    <i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>
+                    <strong>Important Disclosure:</strong>
+                    This calculation uses the standard fixed-payment amortisation formula \(M = P \frac{r(1+r)^n}{(1+r)^n - 1}\). Figures represent educational estimates and do not incorporate lender arrangement fees, legal charges, stamp duty, valuation costs, or variable rate adjustments.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

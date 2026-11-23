@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}My Mortgage Applications | SunMortgages{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1" style="color: var(--sun-navy);">
+            <i class="fa-solid fa-folder-open text-warning me-2"></i>My Mortgage Applications
+        </h2>
+        <p class="text-muted mb-0">Track real-time underwriting progress and status updates for your mortgage requests.</p>
+    </div>
+    <div>
+        <a href="{% url 'apply-mortgage' %}" class="btn btn-sun-gold">
+            <i class="fa-solid fa-plus me-1"></i> New Application
+        </a>
+    </div>
+</div>
+
+<div class="card card-sun">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fa-solid fa-list-check me-2 text-primary"></i>Application Ledger</span>
+        <span class="badge bg-light text-dark border">{{ applications.count }} applications</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ref #</th>
+                        <th>Product Scheme</th>
+                        <th class="text-end">Requested Capital</th>
+                        <th class="text-center">Term</th>
+                        <th class="text-center">Current Status</th>
+                        <th>Submitted Date</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                        <tr>
+                            <td><code>#{{ app.id }}</code></td>
+                            <td class="fw-semibold text-navy">{{ app.product.name }}</td>
+                            <td class="text-end fw-bold">£{{ app.requested_amount|floatformat:2 }}</td>
+                            <td class="text-center">{{ app.term_years }} years</td>
+                            <td class="text-center">
+                                <span class="badge {% if app.status == 'APPROVED' %}badge-approved{% elif app.status == 'REJECTED' %}badge-rejected{% elif app.status == 'UNDER_REVIEW' %}badge-under-review{% else %}badge-submitted{% endif %} px-3 py-1">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ app.submitted_at|date:"d M Y, H:i" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'application-detail' app.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa-solid fa-eye me-1"></i> View Details
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-file-circle-xmark fa-2x mb-2 d-block"></i>
+                                You have not submitted any mortgage applications yet.<br>
+                                <a href="{% url 'apply-mortgage' %}" class="btn btn-sun-primary btn-sm mt-3">Apply Now</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

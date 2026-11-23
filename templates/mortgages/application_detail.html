@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}Application #{{ application.id }} Details | SunMortgages{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    {% if user.role == "STAFF" or user.is_staff %}
+        <a href="{% url 'application-list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Underwriting Pipeline
+        </a>
+    {% else %}
+        <a href="{% url 'my-applications' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to My Applications
+        </a>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Application Details & Financial Terms -->
+    <div class="col-lg-7">
+        <div class="card card-sun shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fa-solid fa-file-invoice me-2 text-primary"></i>Application #{{ application.id }} Overview
+                </span>
+                <span class="badge {% if application.status == 'APPROVED' %}badge-approved{% elif application.status == 'REJECTED' %}badge-rejected{% elif application.status == 'UNDER_REVIEW' %}badge-under-review{% else %}badge-submitted{% endif %} px-3 py-1 fs-6">
+                    {{ application.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <small class="text-muted text-uppercase fw-semibold d-block">Borrower Account</small>
+                        <span class="fw-bold fs-5 text-navy">{{ application.customer.user.username }}</span>
+                        <div class="small text-muted">{{ application.customer.user.email }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted text-uppercase fw-semibold d-block">Customer Category</small>
+                        <span class="badge bg-light text-dark border">{{ application.customer.get_customer_type_display }}</span>
+                        {% if application.customer.company_name %}
+                            <div class="small text-muted mt-1">{{ application.customer.company_name }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted text-uppercase fw-semibold d-block">Mortgage Scheme</small>
+                        <span class="fw-bold text-navy">{{ application.product.name }}</span>
+                        <div class="small text-success">{{ application.product.annual_interest_rate }}% Fixed Rate</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted text-uppercase fw-semibold d-block">Requested Capital</small>
+                        <span class="fs-4 fw-bold text-success">£{{ application.requested_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted text-uppercase fw-semibold d-block">Duration Term</small>
+                        <span>{{ application.term_years }} Years ({{ application.term_years|stringformat:"d"|add:"0" }}0 payments)</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted text-uppercase fw-semibold d-block">Submission Timestamp</small>
+                        <span>{{ application.submitted_at|date:"d M Y, H:i" }}</span>
+                    </div>
+                </div>
+
+                <!-- Financial Calculation Breakdown -->
+                <div class="p-3 bg-light rounded-3 border mb-4">
+                    <h6 class="fw-bold text-navy mb-2"><i class="fa-solid fa-calculator me-1 text-warning"></i> Amortisation Schedule Summary</h6>
+                    <div class="row g-2 text-center">
+                        <div class="col-4">
+                            <small class="text-muted d-block">Monthly Payment</small>
+                            <span class="fw-bold text-navy">£{{ monthly_estimate|floatformat:2 }}</span>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted d-block">Total Repayment</small>
+                            <span class="fw-bold text-dark">£{{ total_cost|floatformat:2 }}</span>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted d-block">Total Interest</small>
+                            <span class="fw-bold text-danger">£{{ total_interest|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Applicant Notes -->
+                {% if application.applicant_notes %}
+                    <div class="mb-3">
+                        <small class="text-muted text-uppercase fw-semibold d-block">Applicant Information &amp; Statement</small>
+                        <p class="text-secondary small bg-light p-3 rounded mb-0">{{ application.applicant_notes }}</p>
+                    </div>
+                {% endif %}
+
+                <!-- Staff Internal Notes -->
+                {% if user.role == "STAFF" or user.is_staff %}
+                    {% if application.staff_notes %}
+                        <div class="mb-3">
+                            <small class="text-warning text-uppercase fw-semibold d-block">
+                                <i class="fa-solid fa-lock me-1"></i> Internal Staff Notes (Confidential)
+                            </small>
+                            <p class="text-dark small bg-warning-subtle p-3 rounded border border-warning mb-0">{{ application.staff_notes }}</p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Staff Decision Action & Audit Timeline -->
+    <div class="col-lg-5">
+        {% if user.role == "STAFF" or user.is_staff %}
+            <!-- AI Underwriting Copilot -->
+            <div class="card card-sun shadow-sm mb-4 border-warning">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fa-solid fa-wand-magic-sparkles text-warning me-2"></i><strong>Gemini AI Underwriter Copilot</strong>
+                    </span>
+                    <span class="badge bg-warning text-dark px-2 py-1 small">GEMINI 3.5</span>
+                </div>
+                <div class="card-body p-3">
+                    <p class="text-secondary small mb-3">
+                        Execute automated AI credit risk evaluation, debt serviceability analysis, and regulatory policy compliance audit using Google Gemini.
+                    </p>
+
+                    <div class="d-grid mb-2">
+                        <button id="btn-run-ai" class="btn btn-warning py-2 fw-semibold text-dark shadow-sm" onclick="runAIUnderwriting()">
+                            <i class="fa-solid fa-brain me-1"></i> Run AI Underwriting Assessment
+                        </button>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="ai-loading" class="text-center py-4 d-none">
+                        <div class="spinner-border text-warning mb-2" role="status"></div>
+                        <div class="small text-muted fw-semibold">Consulting Google Gemini 3.5 Underwriting Engine...</div>
+                        <div class="small text-muted" style="font-size: 0.75rem;">Evaluating debt serviceability &amp; credit risk factors</div>
+                    </div>
+
+                    <!-- AI Result Output -->
+                    <div id="ai-result-box" class="d-none mt-3">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small text-muted text-uppercase fw-bold">Credit Risk Score</span>
+                                <span id="ai-risk-rating-badge" class="badge bg-success px-2 py-1">LOW RISK</span>
+                            </div>
+                            <div class="d-flex align-items-baseline gap-2 mb-2">
+                                <span id="ai-risk-score" class="fs-2 fw-bold text-navy">88</span>
+                                <span class="text-muted small">/ 100</span>
+                                <span id="ai-recommendation" class="badge bg-primary ms-auto small">RECOMMEND APPROVAL</span>
+                            </div>
+
+                            <div class="progress mb-3" style="height: 6px;">
+                                <div id="ai-score-bar" class="progress-bar bg-success" role="progressbar" style="width: 88%"></div>
+                            </div>
+
+                            <h6 class="fw-bold small text-navy mb-1">Executive Summary</h6>
+                            <p id="ai-summary" class="small text-secondary mb-2"></p>
+
+                            <h6 class="fw-bold small text-navy mb-1">Affordability Analysis</h6>
+                            <p id="ai-affordability" class="small text-secondary mb-2"></p>
+
+                            <div id="ai-strengths-box" class="mb-2">
+                                <small class="text-success fw-bold d-block"><i class="fa-solid fa-check me-1"></i>Key Strengths</small>
+                                <ul id="ai-strengths-list" class="small text-secondary ps-3 mb-1"></ul>
+                            </div>
+
+                            <div id="ai-risks-box" class="mb-2">
+                                <small class="text-danger fw-bold d-block"><i class="fa-solid fa-triangle-exclamation me-1"></i>Risk Factors</small>
+                                <ul id="ai-risks-list" class="small text-secondary ps-3 mb-1"></ul>
+                            </div>
+
+                            <div id="ai-stipulations-box" class="mb-3">
+                                <small class="text-primary fw-bold d-block"><i class="fa-solid fa-list-check me-1"></i>Required Stipulations</small>
+                                <ul id="ai-stipulations-list" class="small text-secondary ps-3 mb-0"></ul>
+                            </div>
+
+                            <button id="btn-save-ai-notes" class="btn btn-outline-dark btn-sm w-100" onclick="saveAIToStaffNotes()">
+                                <i class="fa-solid fa-file-pen me-1 text-warning"></i> Save AI Memo to Staff Notes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Underwriter Status Updater -->
+            <div class="card card-sun shadow-sm mb-4">
+                <div class="card-header bg-warning-subtle">
+                    <i class="fa-solid fa-gavel me-2 text-warning"></i>Underwriter Decision Panel
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{% url 'update-application-status' application.pk %}">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Update Application Decision</label>
+                            <select name="status" class="form-select">
+                                {% for val, lbl in application.Status.choices %}
+                                    <option value="{{ val }}" {% if application.status == val %}selected{% endif %}>
+                                        {{ lbl }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Internal Underwriting Notes</label>
+                            <textarea id="staff-notes-field" name="staff_notes" class="form-control" rows="3" placeholder="Enter reason for decision, risk conditions, or bureau reference..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-sun-primary w-100 shadow-sm">
+                            <i class="fa-solid fa-floppy-disk me-1"></i> Record Underwriting Decision
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Decision History Timeline -->
+        <div class="card card-sun shadow-sm">
+            <div class="card-header">
+                <i class="fa-solid fa-timeline me-2 text-primary"></i>Decision Audit Trail &amp; History
+            </div>
+            <div class="card-body p-3">
+                <div class="timeline">
+                    {% for h in history %}
+                        <div class="border-start border-2 border-primary ps-3 pb-3 position-relative">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge bg-light text-dark border small">
+                                    {% if h.previous_status %}{{ h.previous_status }} &rarr; {% endif %}<strong>{{ h.new_status }}</strong>
+                                </span>
+                                <small class="text-muted">{{ h.timestamp|date:"d M, H:i" }}</small>
+                            </div>
+                            <div class="small text-muted mb-1">
+                                Actioned by: <strong>{{ h.changed_by.username|default:"System" }}</strong>
+                            </div>
+                            {% if h.notes %}
+                                <div class="small p-2 bg-light rounded text-secondary">{{ h.notes }}</div>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <p class="text-muted small text-center my-3">No status modifications recorded yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if user.role == "STAFF" or user.is_staff %}
+<script>
+    let currentAIAssessment = null;
+
+    async function runAIUnderwriting() {
+        const btn = document.getElementById('btn-run-ai');
+        const loading = document.getElementById('ai-loading');
+        const resultBox = document.getElementById('ai-result-box');
+
+        btn.disabled = true;
+        loading.classList.remove('d-none');
+        resultBox.classList.add('d-none');
+
+        try {
+            const response = await fetch("{% url 'ai-underwrite-api' application.pk %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') || ''
+                }
+            });
+
+            const data = await response.json();
+            loading.classList.add('d-none');
+            btn.disabled = false;
+
+            if (data.status === 'success') {
+                currentAIAssessment = data.assessment;
+                renderAssessment(data.assessment);
+            } else {
+                alert('Error running AI underwriting: ' + (data.message || 'Unknown error'));
+            }
+        } catch (e) {
+            loading.classList.add('d-none');
+            btn.disabled = false;
+            alert('Failed to connect to AI Underwriting service: ' + e.message);
+        }
+    }
+
+    function renderAssessment(a) {
+        document.getElementById('ai-risk-score').innerText = a.risk_score || 70;
+        document.getElementById('ai-summary').innerText = a.executive_summary || '';
+        document.getElementById('ai-affordability').innerText = a.affordability_analysis || '';
+
+        // Rating badge & bar
+        const ratingBadge = document.getElementById('ai-risk-rating-badge');
+        const scoreBar = document.getElementById('ai-score-bar');
+        ratingBadge.innerText = (a.risk_rating || 'MODERATE') + ' RISK';
+        scoreBar.style.width = (a.risk_score || 70) + '%';
+
+        if (a.risk_score >= 80) {
+            ratingBadge.className = 'badge bg-success px-2 py-1';
+            scoreBar.className = 'progress-bar bg-success';
+        } else if (a.risk_score >= 55) {
+            ratingBadge.className = 'badge bg-warning text-dark px-2 py-1';
+            scoreBar.className = 'progress-bar bg-warning';
+        } else {
+            ratingBadge.className = 'badge bg-danger px-2 py-1';
+            scoreBar.className = 'progress-bar bg-danger';
+        }
+
+        // Recommendation
+        const recBadge = document.getElementById('ai-recommendation');
+        recBadge.innerText = a.recommendation || 'REVIEW';
+        if (a.recommendation && a.recommendation.includes('APPROV')) {
+            recBadge.className = 'badge bg-success ms-auto small';
+        } else if (a.recommendation && a.recommendation.includes('DECLIN')) {
+            recBadge.className = 'badge bg-danger ms-auto small';
+        } else {
+            recBadge.className = 'badge bg-primary ms-auto small';
+        }
+
+        // Strengths
+        const strengthsList = document.getElementById('ai-strengths-list');
+        strengthsList.innerHTML = '';
+        (a.key_strengths || []).forEach(s => {
+            const li = document.createElement('li');
+            li.innerText = s;
+            strengthsList.appendChild(li);
+        });
+
+        // Risks
+        const risksList = document.getElementById('ai-risks-list');
+        risksList.innerHTML = '';
+        (a.risk_factors || []).forEach(r => {
+            const li = document.createElement('li');
+            li.innerText = r;
+            risksList.appendChild(li);
+        });
+
+        // Stipulations
+        const stipList = document.getElementById('ai-stipulations-list');
+        stipList.innerHTML = '';
+        (a.required_stipulations || []).forEach(st => {
+            const li = document.createElement('li');
+            li.innerText = st;
+            stipList.appendChild(li);
+        });
+
+        document.getElementById('ai-result-box').classList.remove('d-none');
+    }
+
+    async function saveAIToStaffNotes() {
+        if (!currentAIAssessment) return;
+        const btn = document.getElementById('btn-save-ai-notes');
+        btn.disabled = true;
+
+        const summaryText = `[RISK SCORE: ${currentAIAssessment.risk_score}/100 | RATING: ${currentAIAssessment.risk_rating}]\n` +
+                            `RECOMMENDATION: ${currentAIAssessment.recommendation}\n` +
+                            `EXECUTIVE SUMMARY: ${currentAIAssessment.executive_summary}\n` +
+                            `AFFORDABILITY: ${currentAIAssessment.affordability_analysis}`;
+
+        // Also put directly into textarea for convenience
+        const notesArea = document.getElementById('staff-notes-field');
+        if (notesArea) {
+            notesArea.value = (notesArea.value ? notesArea.value + '\n\n' : '') + summaryText;
+        }
+
+        try {
+            const resp = await fetch("{% url 'ai-save-notes-api' application.pk %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') || ''
+                },
+                body: JSON.stringify({ notes: summaryText })
+            });
+            const data = await resp.json();
+            if (data.status === 'success') {
+                btn.innerHTML = '<i class="fa-solid fa-check text-success me-1"></i> Assessment Saved to Staff Notes!';
+                btn.className = 'btn btn-success btn-sm w-100 text-white';
+            } else {
+                alert('Could not save notes: ' + (data.message || 'Unknown error'));
+                btn.disabled = false;
+            }
+        } catch (e) {
+            alert('Failed to save to staff notes: ' + e.message);
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endif %}
+{% endblock %}

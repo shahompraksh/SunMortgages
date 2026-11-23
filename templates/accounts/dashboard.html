@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | SunMortgages{% endblock %}
+
+{% block content %}
+<!-- Welcome Header Banner -->
+<div class="card card-sun mb-4" style="background: linear-gradient(135deg, var(--sun-navy) 0%, var(--sun-navy-light) 100%); color: #ffffff;">
+    <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-warning text-dark text-uppercase px-3 py-1 mb-2 fw-semibold">
+                    <i class="fa-solid fa-id-badge me-1"></i> {{ user.get_role_display }} Portal
+                </span>
+                <h2 class="fw-bold mb-1">Welcome back, {{ user.get_full_name|default:user.username }}</h2>
+                <p class="text-white-50 mb-0">SunMortgages Client &amp; Capital Management System &bull; Active Session</p>
+            </div>
+            <div class="mt-3 mt-md-0 d-flex gap-2">
+                {% if user.role == "STAFF" or user.is_staff %}
+                    <a href="{% url 'application-list' %}" class="btn btn-sun-gold shadow-sm">
+                        <i class="fa-solid fa-list-check me-1"></i> Review Applications
+                    </a>
+                    <a href="{% url 'reports-dashboard' %}" class="btn btn-outline-light shadow-sm">
+                        <i class="fa-solid fa-chart-pie me-1"></i> Executive Reports
+                    </a>
+                {% else %}
+                    <a href="{% url 'apply-mortgage' %}" class="btn btn-sun-gold shadow-sm">
+                        <i class="fa-solid fa-file-signature me-1"></i> Apply for Mortgage
+                    </a>
+                    <a href="{% url 'repayment-estimator' %}" class="btn btn-outline-light shadow-sm">
+                        <i class="fa-solid fa-calculator me-1"></i> Calculator
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.role == "STAFF" or user.is_staff %}
+    <!-- ========================================== -->
+    <!-- 1. STAFF DASHBOARD                         -->
+    <!-- ========================================== -->
+    <div class="row g-4 mb-4">
+        <!-- Customers KPI -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-sun metric-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <small class="text-muted text-uppercase fw-semibold">Registered Customers</small>
+                        <h3 class="fw-bold mt-1 text-navy mb-1">{{ total_customers }}</h3>
+                        <small class="text-muted">{{ individual_customers }} Individual &bull; {{ developer_customers }} Developer</small>
+                    </div>
+                    <div class="p-2 bg-primary-subtle text-primary rounded-3">
+                        <i class="fa-solid fa-users fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mortgage Products KPI -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-sun metric-card gold h-100 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <small class="text-muted text-uppercase fw-semibold">Mortgage Schemes</small>
+                        <h3 class="fw-bold mt-1 text-navy mb-1">{{ total_products }}</h3>
+                        <small class="text-muted">Active lending schemes</small>
+                    </div>
+                    <div class="p-2 bg-warning-subtle text-warning rounded-3">
+                        <i class="fa-solid fa-landmark fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Applications KPI -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-sun metric-card h-100 p-3" style="border-left-color: #ffc107;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <small class="text-muted text-uppercase fw-semibold">Pending Review</small>
+                        <h3 class="fw-bold mt-1 text-warning mb-1">{{ pending_applications }}</h3>
+                        <small class="text-muted">Requires underwriting decision</small>
+                    </div>
+                    <div class="p-2 bg-warning-subtle text-warning rounded-3">
+                        <i class="fa-solid fa-clock-rotate-left fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approved Applications KPI -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-sun metric-card success h-100 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <small class="text-muted text-uppercase fw-semibold">Approved Mortgages</small>
+                        <h3 class="fw-bold mt-1 text-success mb-1">{{ approved_applications }}</h3>
+                        <small class="text-muted">{{ rejected_applications }} declined</small>
+                    </div>
+                    <div class="p-2 bg-success-subtle text-success rounded-3">
+                        <i class="fa-solid fa-circle-check fa-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Action Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-5">
+            <div class="card card-sun h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Application Pipeline Status</span>
+                    <span class="badge bg-light text-dark border">Total: {{ total_applications }}</span>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center align-items-center p-4">
+                    <div style="max-width: 260px; max-height: 260px; width: 100%;">
+                        <canvas id="statusDoughnutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card card-sun h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-bolt me-2 text-warning"></i>Operational Shortcuts</span>
+                    <span class="text-muted small">Staff Quick Access</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{% url 'customer-list' %}" class="btn btn-outline-primary d-flex align-items-center p-3 w-100 text-start rounded-3">
+                                <i class="fa-solid fa-users fa-2x me-3 text-primary"></i>
+                                <div>
+                                    <div class="fw-bold">Customer Directory</div>
+                                    <small class="text-muted">Search &amp; manage borrower profiles</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'application-list' %}" class="btn btn-outline-warning d-flex align-items-center p-3 w-100 text-start rounded-3 text-dark">
+                                <i class="fa-solid fa-file-invoice-dollar fa-2x me-3 text-warning"></i>
+                                <div>
+                                    <div class="fw-bold">Mortgage Pipeline</div>
+                                    <small class="text-muted">Underwrite loans &amp; record notes</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'product-manage' %}" class="btn btn-outline-success d-flex align-items-center p-3 w-100 text-start rounded-3 text-dark">
+                                <i class="fa-solid fa-layer-group fa-2x me-3 text-success"></i>
+                                <div>
+                                    <div class="fw-bold">Product Schemes</div>
+                                    <small class="text-muted">Configure interest rates &amp; limits</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'banking-dashboard' %}" class="btn btn-outline-info d-flex align-items-center p-3 w-100 text-start rounded-3 text-dark">
+                                <i class="fa-solid fa-network-wired fa-2x me-3 text-info"></i>
+                                <div>
+                                    <div class="fw-bold">Banking Gateway</div>
+                                    <small class="text-muted">Test bank API validation &amp; rate sync</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Applications Table -->
+    <div class="card card-sun mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Recent Mortgage Submissions</span>
+            <a href="{% url 'application-list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ref #</th>
+                            <th>Borrower</th>
+                            <th>Category</th>
+                            <th>Product</th>
+                            <th class="text-end">Requested Amount</th>
+                            <th class="text-center">Term</th>
+                            <th class="text-center">Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in recent_applications %}
+                            <tr>
+                                <td><code>#{{ app.id }}</code></td>
+                                <td>
+                                    <strong>{{ app.customer.user.username }}</strong><br>
+                                    <small class="text-muted">{{ app.customer.user.email }}</small>
+                                </td>
+                                <td>{{ app.customer.get_customer_type_display }}</td>
+                                <td>{{ app.product.name }}</td>
+                                <td class="text-end fw-bold text-navy">£{{ app.requested_amount|floatformat:2 }}</td>
+                                <td class="text-center">{{ app.term_years }} yrs</td>
+                                <td class="text-center">
+                                    <span class="badge {% if app.status == 'APPROVED' %}badge-approved{% elif app.status == 'REJECTED' %}badge-rejected{% elif app.status == 'UNDER_REVIEW' %}badge-under-review{% else %}badge-submitted{% endif %} px-2 py-1">
+                                        {{ app.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'application-detail' app.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fa-solid fa-magnifying-glass me-1"></i> Review
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">No mortgage applications submitted yet.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{% elif user.role == "DEVELOPER" %}
+    <!-- ========================================== -->
+    <!-- 2. PROPERTY DEVELOPER DASHBOARD            -->
+    <!-- ========================================== -->
+    <div class="row g-4 mb-4">
+        <!-- Developer Profile Card -->
+        <div class="col-lg-4">
+            <div class="card card-sun h-100">
+                <div class="card-header">
+                    <i class="fa-solid fa-building me-2 text-primary"></i>Company Profile
+                </div>
+                <div class="card-body">
+                    <h5 class="fw-bold text-navy mb-1">{{ profile.company_name|default:"Corporate Developer Account" }}</h5>
+                    <p class="text-muted small mb-3">Commercial Borrower Account &bull; Status: <span class="badge bg-success">{{ profile.get_status_display }}</span></p>
+
+                    <div class="mb-2"><strong>Authorized User:</strong> {{ user.get_full_name|default:user.username }}</div>
+                    <div class="mb-2"><strong>Corporate Email:</strong> {{ user.email }}</div>
+                    <div class="mb-2"><strong>Telephone:</strong> {{ user.phone_number|default:"Not recorded" }}</div>
+                    <div class="mb-3"><strong>Registered Address:</strong><br><span class="text-muted">{{ profile.address|default:"No address registered." }}</span></div>
+
+                    <a href="{% url 'my-profile' %}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fa-solid fa-pen-to-square me-1"></i> Edit Business Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Developer Portfolio Summary -->
+        <div class="col-lg-8">
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card card-sun metric-card p-3">
+                        <small class="text-muted text-uppercase fw-semibold">Total Schemes Financed</small>
+                        <h3 class="fw-bold text-navy mt-1 mb-0">{{ total_applications_count }}</h3>
+                        <small class="text-muted">Applications submitted</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card card-sun metric-card gold p-3">
+                        <small class="text-muted text-uppercase fw-semibold">Total Capital Requested</small>
+                        <h3 class="fw-bold text-warning mt-1 mb-0">£{{ total_requested_volume|floatformat:2 }}</h3>
+                        <small class="text-muted">Cumulative portfolio value</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Developer Applications -->
+            <div class="card card-sun">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-folder-open me-2 text-primary"></i>My Development Financing Applications</span>
+                    <a href="{% url 'my-applications' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-end">Loan Amount</th>
+                                    <th class="text-center">Term</th>
+                                    <th class="text-center">Status</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in applications %}
+                                    <tr>
+                                        <td class="fw-semibold">{{ app.product.name }}</td>
+                                        <td class="text-end fw-bold text-navy">£{{ app.requested_amount|floatformat:2 }}</td>
+                                        <td class="text-center">{{ app.term_years }} yrs</td>
+                                        <td class="text-center">
+                                            <span class="badge {% if app.status == 'APPROVED' %}badge-approved{% elif app.status == 'REJECTED' %}badge-rejected{% elif app.status == 'UNDER_REVIEW' %}badge-under-review{% else %}badge-submitted{% endif %} px-2 py-1">
+                                                {{ app.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ app.submitted_at|date:"d M Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'application-detail' app.pk %}" class="btn btn-sm btn-outline-primary">Details</a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            No development loans submitted yet.<br>
+                                            <a href="{% url 'apply-mortgage' %}" class="btn btn-sun-primary btn-sm mt-2">Submit Development Proposal</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% else %}
+    <!-- ========================================== -->
+    <!-- 3. INDIVIDUAL CUSTOMER DASHBOARD           -->
+    <!-- ========================================== -->
+    <div class="row g-4 mb-4">
+        <!-- Customer Profile Card -->
+        <div class="col-lg-4">
+            <div class="card card-sun h-100">
+                <div class="card-header">
+                    <i class="fa-solid fa-user me-2 text-primary"></i>Personal Profile
+                </div>
+                <div class="card-body">
+                    <h5 class="fw-bold text-navy mb-1">{{ user.get_full_name|default:user.username }}</h5>
+                    <p class="text-muted small mb-3">Residential Borrower &bull; Status: <span class="badge bg-success">{{ profile.get_status_display }}</span></p>
+
+                    <div class="mb-2"><strong>Email:</strong> {{ user.email }}</div>
+                    <div class="mb-2"><strong>Phone:</strong> {{ user.phone_number|default:"Not recorded" }}</div>
+                    <div class="mb-3"><strong>Residential Address:</strong><br><span class="text-muted">{{ profile.address|default:"No address registered." }}</span></div>
+
+                    <a href="{% url 'my-profile' %}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fa-solid fa-pen-to-square me-1"></i> Update Contact Details
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applications & Products Overview -->
+        <div class="col-lg-8">
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card card-sun metric-card p-3">
+                        <small class="text-muted text-uppercase fw-semibold">My Applications</small>
+                        <h3 class="fw-bold text-navy mt-1 mb-0">{{ total_applications_count }}</h3>
+                        <small class="text-muted">Mortgage requests submitted</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card card-sun metric-card gold p-3">
+                        <small class="text-muted text-uppercase fw-semibold">Total Borrowing Value</small>
+                        <h3 class="fw-bold text-warning mt-1 mb-0">£{{ total_requested_volume|floatformat:2 }}</h3>
+                        <small class="text-muted">Combined loan value</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Applications Table -->
+            <div class="card card-sun">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-folder-open me-2 text-primary"></i>My Mortgage Applications</span>
+                    <a href="{% url 'my-applications' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-end">Loan Amount</th>
+                                    <th class="text-center">Term</th>
+                                    <th class="text-center">Status</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in applications %}
+                                    <tr>
+                                        <td class="fw-semibold">{{ app.product.name }}</td>
+                                        <td class="text-end fw-bold text-navy">£{{ app.requested_amount|floatformat:2 }}</td>
+                                        <td class="text-center">{{ app.term_years }} yrs</td>
+                                        <td class="text-center">
+                                            <span class="badge {% if app.status == 'APPROVED' %}badge-approved{% elif app.status == 'REJECTED' %}badge-rejected{% elif app.status == 'UNDER_REVIEW' %}badge-under-review{% else %}badge-submitted{% endif %} px-2 py-1">
+                                                {{ app.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ app.submitted_at|date:"d M Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'application-detail' app.pk %}" class="btn btn-sm btn-outline-primary">Details</a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            You have no active mortgage applications.<br>
+                                            <a href="{% url 'apply-mortgage' %}" class="btn btn-sun-primary btn-sm mt-2">Apply for a Mortgage</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if user.role == "STAFF" or user.is_staff %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const ctx = document.getElementById('statusDoughnutChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Submitted', 'Under Review', 'Approved', 'Rejected'],
+                    datasets: [{
+                        data: [
+                            {{ pending_applications|default:0 }},
+                            {{ pending_applications|default:0 }},
+                            {{ approved_applications|default:0 }},
+                            {{ rejected_applications|default:0 }}
+                        ],
+                        backgroundColor: ['#0dcaf0', '#ffc107', '#198754', '#dc3545'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
